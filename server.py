@@ -2,8 +2,10 @@ import glob
 import importlib
 import inspect
 import os
+from bottle import request, Bottle, abort, response
+from gevent import monkey
 
-from bottle import request, Bottle, abort,response
+monkey.patch_all()
 
 SERVICE = {}
 SERVICE_PACKAGE = 'service'
@@ -23,110 +25,82 @@ for f in files:
             service_name = (module_name + '.' + key).replace('.', '/')
             SERVICE[service_name] = value
 
-# print(SERVICE)
-# print(*inspect.getfullargspec(SERVICE['service/user/get_user_info']).args)
 
-js_script = r'''
-    /**
-     * define ajax method
-     */
-    function encodeData(data) {
-        if (typeof data === 'object') {
-            var r = "";
-            for (var c in data) {
-                r += c + "=" + data[c] + "&";
-            }
-            return r.substring(0, r.length - 1);
-        } else {
-            return data;
+base_script = r'''
+function encodeData(data) {
+    if (typeof data === 'object') {
+        var r = "";
+        for (var c in data) {
+            r += c + "=" + encodeURIComponent(data[c]) + "&";
         }
+        return r.substring(0, r.length - 1);
+    } else {
+        return data;
     }
+}
 
-    function trim(s) {
-        return s.replace(/^\s+|\s+$/gm, '');
+function initService(name) {
+    var variables = name.split('.');
+    var p = window;
+    for (var i = 0; i < variables.length; i++) {
+        var v = variables[i];
+        p[v] = p[v] || {};
+        p = p[v];
     }
+}
 
-    String.prototype.format = function () {
-        if (arguments.length == 0) return this;
-        var param = arguments[0];
-        var s = this;
-        if (typeof(param) == 'object') {
-            for (var key in param)
-                s = s.replace(new RegExp("\\{" + key + "\\}", "g"), param[key]);
-            return s;
-        } else {
-            for (var i = 0; i < arguments.length; i++)
-                s = s.replace(new RegExp("\\{" + i + "\\}", "g"), arguments[i]);
-            return s;
-        }
-    }
-
-    function ajaxPost(url, data, success, error) {
-        var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
-        success = success || function (data) {
-        };
-        error = error || function (e) {
-            console.error(e)
-        };
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState == 4) {
-                if (xhr.status == 200) {
-                    success(xhr.response);
-                } else {
-                    error(xhr.response);
-                }
+function bindService(url, data, success, error) {
+    var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
+    success = success || function (data) {
+    };
+    error = error || function (e) {
+        console.error(e)
+    };
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4) {
+            if (xhr.status == 200) {
+                success(xhr.response);
+            } else {
+                error(xhr.response);
             }
         }
-        xhr.open("POST", url, true);
-        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        xhr.send(encodeData(data));
     }
+    xhr.open("POST", url, true);
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xhr.send(encodeData(data));
 
-    function initService(name, args, url) {
-        //init service variable
-        var variables = name.split('.');
-        var p = window;
-        for (var i = 0; i < variables.length; i++) {
-            var v = variables[i];
-            p[v] = p[v] || {};
-            p = p[v];
-        }
-        //init service function
-        var data = [];
-        if (trim(args)) {
-            var argsArray = args.split(',');
-            for (var i = 0; i < argsArray.length; i++) {
-                var arg = trim(argsArray[i]);
-                data.push(arg + ':' + arg);
-            }
-            args += ', success, error';
-        } else {
-            args = 'success, error';
-        }
-
-        var fun_template = '(window.{name} = function({args}) { ajaxPost("{url}", {data}, success, error) })'.format({
-            name: name,
-            args: args,
-            url: url,
-            data: '{' + data.join(', ') + '}'
-        });
-        eval(fun_template);
-    }
+}
 
 '''
 
 
 @app.route('/service.js')
 def service():
-    global js_script
-    script = js_script
+    global base_script
+    script = base_script
 
     scheme = request.urlparts.scheme
     netloc = request.urlparts.netloc
+    for name in SERVICE.keys():
+        script += 'initService("%s");\n' % name.replace('/', '.')
+
     for name, func in SERVICE.items():
         url = '{0}://{1}/{2}'.format(scheme, netloc, name)
-        args = ', '.join(inspect.getfullargspec(func).args)
-        script += 'initService("{0}", "{1}", "{2}");\n'.format(name.replace('/', '.'), args, url)
+        doc = inspect.getdoc(func)
+        if doc:
+            script += '\n/**\n' + ''.join(['* %s\n' % line for line in doc.split('\n')]) + '*/\n'
+        args = inspect.getfullargspec(func).args
+        js_args = ', '.join(args)
+        if js_args:
+            js_args += ', '
+        js_args += 'success, error'
+        data = '{%s}' % ', '.join(['{0}:{0}'.format(arg) for arg in args])
+        script += 'window.%(name)s = function(%(js_args)s){ bindService("%(url)s", %(data)s, success, error); }\n' % {
+            "name": name.replace('/', '.'),
+            "js_args": js_args,
+            "url": url,
+            "data": data
+        }
 
     response.headers['Content-Type'] = 'application/javascript'
     return script
@@ -150,4 +124,4 @@ def enable_cors():
     response.headers['Access-Control-Allow-Origin'] = '*'
 
 
-app.run(host='0.0.0.0', port=80)
+app.run(host='0.0.0.0', port=80, server='gevent')
