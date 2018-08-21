@@ -23,8 +23,8 @@ for f in files:
             service_name = (module_name + '.' + key).replace('.', '/')
             SERVICE[service_name] = value
 
-print(SERVICE)
-print(*inspect.getfullargspec(SERVICE['service/user/get_user_info']).args)
+# print(SERVICE)
+# print(*inspect.getfullargspec(SERVICE['service/user/get_user_info']).args)
 
 js_script = r'''
     /**
@@ -150,4 +150,4 @@ def enable_cors():
     response.headers['Access-Control-Allow-Origin'] = '*'
 
 
-app.run(host='0.0.0.0', port=8080)
+app.run(host='0.0.0.0', port=80)
