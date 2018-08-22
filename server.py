@@ -4,6 +4,7 @@ import inspect
 import os
 from bottle import request, Bottle, abort, response
 from gevent import monkey
+import json
 
 monkey.patch_all()
 
@@ -27,18 +28,6 @@ for f in files:
 
 
 base_script = r'''
-function encodeData(data) {
-    if (typeof data === 'object') {
-        var r = "";
-        for (var c in data) {
-            r += c + "=" + encodeURIComponent(data[c]) + "&";
-        }
-        return r.substring(0, r.length - 1);
-    } else {
-        return data;
-    }
-}
-
 function initService(name) {
     var variables = name.split('.');
     var p = window;
@@ -50,7 +39,11 @@ function initService(name) {
 }
 
 function bindService(url, data, success, error) {
-    var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
+    var xhr = new XMLHttpRequest();
+    var formData = new FormData();
+    for(var key in data) {
+        formData.append(key, data[key]);
+    }
     success = success || function (data) {
     };
     error = error || function (e) {
@@ -66,9 +59,7 @@ function bindService(url, data, success, error) {
         }
     }
     xhr.open("POST", url, true);
-    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    xhr.send(encodeData(data));
-
+    xhr.send(formData);
 }
 
 '''
@@ -108,15 +99,15 @@ def service():
 
 @app.route('/<path:path>', method=['GET', 'POST'])
 def dispatcher(path):
-    params = dict(request.params.decode())
+    params = dict(request.POST)
     print(path, params)
     service_function = SERVICE.get(path, None)
     if service_function is None:
-        abort(404, 'Service not found!')
+        return json.dumps({'code': 404, 'message': 'Service "%s" not found!' % path}, ensure_ascii=False)
     try:
         return service_function(**params)
     except Exception as e:
-        abort(500, str(e))
+        return json.dumps({'code': 500, 'message': 'Server error: %s' % e}, ensure_ascii=False)
 
 
 @app.hook('after_request')

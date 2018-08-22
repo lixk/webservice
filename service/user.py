@@ -1,6 +1,6 @@
 import json
 
-users = [{'id': 1, 'name': '小明'}, {'id': 2, 'name': '花花'}]
+users = [{'id': 1, 'name': '小明'}, {'id': 2, 'name': '花花'}, {'id': '花花&id=123', 'name': '花花'}]
 
 
 def get_user_list():
@@ -19,6 +19,7 @@ def get_user_by_id(id):
     :return:
     """
     for user in users:
+        print(id)
         if user['id'] == int(id):
             return json.dumps(user, ensure_ascii=False)
     return None
