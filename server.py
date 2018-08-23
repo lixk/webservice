@@ -112,4 +112,5 @@ def enable_cors():
     response.headers['Access-Control-Allow-Origin'] = '*'
 
 
-run(app=app, host='0.0.0.0', port=80, server='gevent')
+if __name__ == '__main__':
+    run(app=app, host='0.0.0.0', port=80, server='gevent')
