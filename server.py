@@ -1,10 +1,12 @@
 import glob
 import importlib
 import inspect
-import os
-from bottle import request, Bottle, abort, response
-from gevent import monkey
 import json
+import logging
+import os
+
+from bottle import request, Bottle, response, run
+from gevent import monkey
 
 monkey.patch_all()
 
@@ -25,7 +27,6 @@ for f in files:
         if not key.startswith('_') and inspect.isfunction(value):
             service_name = (module_name + '.' + key).replace('.', '/')
             SERVICE[service_name] = value
-
 
 base_script = r'''
 function initService(name) {
@@ -107,6 +108,7 @@ def dispatcher(path):
     try:
         return service_function(**params)
     except Exception as e:
+        logging.error('Server error:', e)
         return json.dumps({'code': 500, 'message': 'Server error: %s' % e}, ensure_ascii=False)
 
 
@@ -115,4 +117,4 @@ def enable_cors():
     response.headers['Access-Control-Allow-Origin'] = '*'
 
 
-app.run(host='0.0.0.0', port=80, server='gevent')
+run(app=app, host='0.0.0.0', port=80, server='gevent')

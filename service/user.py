@@ -1,6 +1,6 @@
 import json
 
-users = [{'id': 1, 'name': '小明'}, {'id': 2, 'name': '花花'}, {'id': '花花&id=123', 'name': '花花'}]
+users = [{'id': 1, 'name': 'Tom'}, {'id': 2, 'name': '花花'}]
 
 
 def get_user_list():
@@ -23,6 +23,19 @@ def get_user_by_id(id):
         if user['id'] == int(id):
             return json.dumps(user, ensure_ascii=False)
     return None
+
+
+def upload(file):
+    """
+    upload user info
+
+    :param file:
+    :return:
+    """
+    print(file.name, file.filename)
+    path = 'data/{0}'.format(file.filename)
+    file.save(path)
+    return path
 
 
 def _private_function():
