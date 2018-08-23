@@ -42,14 +42,9 @@ function initService(name) {
 function bindService(url, data, success, error) {
     var xhr = new XMLHttpRequest();
     var formData = new FormData();
-    for(var key in data) {
-        formData.append(key, data[key]);
-    }
-    success = success || function (data) {
-    };
-    error = error || function (e) {
-        console.error(e)
-    };
+    for(var key in data) { formData.append(key, data[key]); }
+    success = success || function (data) {};
+    error = error || function (e) { console.error(e) };
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4) {
             if (xhr.status == 200) {
