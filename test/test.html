@@ -6,10 +6,37 @@
 </head>
 <body>
 <input type="file" name="file" id="file">
+<img id="img">
 <script>
+function getPath(obj) {
+ if (obj) {
+  if (window.navigator.userAgent.indexOf("MSIE") >= 1) {
+   obj.select();
+   return document.selection.createRange().text;
+  } else if (window.navigator.userAgent.indexOf("Firefox") >= 1) {
+   if (obj.files) {
+    return obj.files.item(0).getAsDataURL();
+   }
+   return obj.value;
+  }
+  return obj.value;
+ }
+}
+
+
     //window.service.user.get_user_by_id('1', function(data){document.write(data)});
     document.querySelector('#file').onchange = function (e) {
-        window.service.user.upload(this.files[0], function(data){console.log(data)});
+    //alert(this.value);
+    var file = this.files[0];
+		filename = file.name.split(".")[0];
+		var reader = new FileReader();
+		reader.onload = function() {
+			console.log(this.result)
+			alert(this.result);
+		}
+		reader.readAsText(file);
+    alert( window.URL.createObjectURL(this.files[0]));
+        window.service.user.upload(this.files[0], function(data){console.log(data); alert(data)});
     }
 </script>
 </body>
