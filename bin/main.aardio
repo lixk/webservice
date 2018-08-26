@@ -39,8 +39,18 @@ mb.external = {
 mainForm.width=args['width'] ? args['width'] : 1000;
 mainForm.height=args['height'] ? args['height'] : 680;
 mainForm.setIcon(args['icon']);
-mb.go(args['url'] ? args['url'] : 'html/error.html'); 
-mb.wait(); //等待页面完全打开
+var url = args['url'];
+if(url){
+	mb.go(url);
+	if(!mb.wait(null, 5000)){//等待页面完全打开
+		mb.doScript("document.write('<h1>Error Page!</h1>')");
+	}
+}else{
+    mb.doScript("document.write('<h1>Error Page!</h1>')");
+}
+
+
+
 
 mainForm.show();
 win.loopMessage();
