@@ -1,19 +1,21 @@
 import win.ui;
 /*DSG{{*/
-mainForm = win.form(text="本地窗口小程序";left=300;top=200;right=1015;bottom=681;acceptfiles=1;composited=1)
+mainForm = win.form(text="窗体";left=300;top=200;right=1015;bottom=681;acceptfiles=1;composited=1)
 mainForm.add()
 /*}}*/
 
 import web.blink.portable;//生成独立EXE
 import web.blink.jsFunction;//可选预定义全局JS函数
 import web.blink.form;//导入miniblink组件
+import web.blink.layeredWindow;
+import fsys.dlg;
+
 var mb = web.blink.form(mainForm);
-var args = _ARGV;
 
 //打开链接时触发该事件
-mb.onNavigation = function(url,navigationType){ 
+mb.onNavigation = function(url,navigationType){
 	if( navigationType == 0/*_WKE_NAVIGATION_TYPE_LINKCLICK*/ ){
-	
+
 	}
 	return true;
 }
@@ -31,26 +33,53 @@ mb.external = {
     close = function(){
         mainForm.close();
     };
-    alert = function(content, title){ 
+    alert = function(content, title){
         mainForm.msgbox(content, title);
     };
+    openFile = function(fileType, title){
+    	return fsys.dlg.open(fileType, title);
+    };
+    openDir = function(dir,parentWindow, subTitle, title){
+    	return fsys.dlg.opendir(dir,parentWindow, subTitle, title);
+    };
+    saveFile = function(fileType, title){
+    	return fsys.dlg.save(fileType, title);
+    };
+
 }
 
-mainForm.width=args['width'] ? args['width'] : 1000;
-mainForm.height=args['height'] ? args['height'] : 680;
-mainForm.setIcon(args['icon']);
-var url = args['url'];
-if(url){
-	mb.go(url);
-	if(!mb.wait(null, 5000)){//等待页面完全打开
-		mb.doScript("document.write('<h1>Error Page!</h1>')");
+//窗口图标
+if(_ARGV['icon']) mainForm.setIcon(_ARGV['icon']);
+//窗口标题
+if(_ARGV['title']) mainForm.text = _ARGV['title'];
+//是否有最小化按钮
+if(_ARGV['minbox'] == 'false') mainForm.modifyStyle(0x20000/*_WS_MINIMIZEBOX*/ , 0);
+//是否有最大化按钮
+if(_ARGV['maxbox'] == 'false') mainForm.modifyStyle(0x10000/*_WS_MAXIMIZEBOX*/, 0);
+//是否允许缩放边框
+if(_ARGV['sizebox'] == 'false') mainForm.modifyStyle(0x40000/*_WS_SIZEBOX*/, 0);
+//是否有边框
+if(_ARGV['border'] == 'false') mainForm.modifyStyle(~0x800000/*_WS_BORDER*/, 0);
+//是否有菜单
+if(_ARGV['menu'] == 'false') mainForm.modifyStyle(0x80000/*_WS_SYSMENU*/, 0);
+//是否透明
+//mainForm.transparent(200,F);
+
+//窗口大小及位置
+mainForm.width = _ARGV['width'] ? _ARGV['width'] : 1000;
+mainForm.height = _ARGV['height'] ? _ARGV['height'] : 680;
+var screen_width, screen_height = win.getScreen();
+mainForm.setPos((screen_width-mainForm.width)/2, (screen_height-mainForm.height)/2);
+//加载资源
+if(_ARGV['url']){
+	mb.go(_ARGV['url']);
+	var timeout = _ARGV['timeout'] ? tonumber(_ARGV['timeout'],10):5000;
+	if(!mb.wait(null, timeout)){//等待页面打开
+		mb.doScript("document.write('<h1>timeout!</h1>')");
 	}
 }else{
-    mb.doScript("document.write('<h1>Error Page!</h1>')");
+    mb.doScript("document.write('<h1>404!</h1>')");
 }
-
-
-
 
 mainForm.show();
 win.loopMessage();
