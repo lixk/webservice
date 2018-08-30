@@ -1,6 +1,6 @@
 import win.ui;
 /*DSG{{*/
-mainForm = win.form(text="layer";right=759;bottom=469)
+mainForm = win.form(text="layer";right=759;bottom=469;exmode="toolwindow")
 mainForm.add()
 /*}}*/
 
@@ -9,6 +9,8 @@ import web.blink.jsFunction;//可选预定义全局JS函数
 import web.blink.form;//导入miniblink组件
 import web.blink.layeredWindow;
 import fsys.dlg;
+import mouse;
+import web.json;
 
 var mb = _ARGV['layered'] == 'true' ? web.blink.layeredWindow(mainForm) : web.blink.form(mainForm);
 
@@ -38,6 +40,37 @@ mb.external = {
     saveFile = function(fileType, title){
     	return fsys.dlg.save(fileType, title);
     };
+    clipRead = function(){
+    	return win.clip.read();
+    };
+    getMousePos = function(){
+        var x,y = mouse.getPos();
+    	return web.json.stringify({x=x;y=y});
+    }
+    getPos = function(){
+        var x,y,width,height = win.getPos(mainForm.hwnd,true);
+        return web.json.stringify({x=x;y=y;width=width;height=height});
+    };
+    setPos = function(x,y,width,height){
+        win.setPos(mainForm.hwnd,x,y,width,height);
+    };
+    getScreen = function(){
+        var width,height = win.getScreen();
+        return web.json.stringify({width=width;height=height});
+    };
+    setIcon = function(icon){
+    	mainForm.setIcon(icon);
+    };
+    setTitle = function(title){
+    	mainForm.text = title;
+    };
+    setTopmost = function(state){
+        if(state){
+            win.setTopmost(mainForm.hwnd);
+        } else {
+            win.setTopmost(mainForm.hwnd, false);
+        }
+    };
 
 }
 
@@ -53,10 +86,17 @@ mb.onNavigation = function(url,navigationType){
 if(_ARGV['icon']) mainForm.setIcon(_ARGV['icon']);
 //窗口标题
 if(_ARGV['title']) mainForm.text = _ARGV['title'];
+//窗口置顶
+if(_ARGV['topmost'] == 'true') win.setTopmost(mainForm.hwnd);
 //是否有最小化按钮
 if(_ARGV['minbox'] == 'false') mainForm.modifyStyle(0x20000/*_WS_MINIMIZEBOX*/ , 0);
 //是否有最大化按钮
 if(_ARGV['maxbox'] == 'false') mainForm.modifyStyle(0x10000/*_WS_MAXIMIZEBOX*/, 0);
+//是否是toolwindow
+if(_ARGV['toolwindow'] == 'true'){
+  mainForm.modifyStyleEx(0x40000/*_WS_EX_APPWINDOW*/, 0);
+  mainForm.modifyStyleEx(0, 0x80/*_WS_EX_TOOLWINDOW*/);
+ }
 //是否允许缩放边框
 if(_ARGV['sizebox'] == 'false') mainForm.modifyStyle(0x40000/*_WS_SIZEBOX*/, 0);
 //是否有边框
@@ -69,6 +109,14 @@ mainForm.width = _ARGV['width'] ? _ARGV['width'] : 1000;
 mainForm.height = _ARGV['height'] ? _ARGV['height'] : 680;
 var screen_width, screen_height = win.getScreen();
 mainForm.setPos((screen_width-mainForm.width)/2, (screen_height-mainForm.height)/2);
+
+mainForm.wndproc = function(hwnd,message,wParam,lParam){
+    	select( message ) {
+    		case 0x204/*_WM_RBUTTONDOWN*/{
+
+    		}
+    	}
+	}
 //加载资源
 if(_ARGV['url']){
 	mb.go(_ARGV['url']);
