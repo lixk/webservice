@@ -1,6 +1,6 @@
 import win.ui;
 /*DSG{{*/
-mainForm = win.form(text="layer";right=759;bottom=469;exmode="toolwindow")
+mainForm = win.form(text="easy-window";right=759;bottom=469)
 mainForm.add()
 /*}}*/
 
@@ -8,9 +8,11 @@ import web.blink.portable;//生成独立EXE
 import web.blink.jsFunction;//可选预定义全局JS函数
 import web.blink.form;//导入miniblink组件
 import web.blink.layeredWindow;
-import fsys.dlg;
-import mouse;
 import web.json;
+import fsys.dlg;
+import fsys.file;
+import mouse;
+
 
 var mb = _ARGV['layered'] == 'true' ? web.blink.layeredWindow(mainForm) : web.blink.form(mainForm);
 
@@ -40,8 +42,23 @@ mb.external = {
     saveFile = function(fileType, title){
     	return fsys.dlg.save(fileType, title);
     };
+    readFile = function(path){
+        var f = fsys.file(path);
+        var text = f.readAll();
+        f.close();
+    	return text;
+    }
+    writeFile = function(path, text){
+        var f = fsys.file(path,"w");
+        var r = f.write(text);
+        f.close();
+        return r;
+    }
     clipRead = function(){
     	return win.clip.read();
+    };
+    clipWrite = function(text){
+    	return win.clip.write(text);
     };
     getMousePos = function(){
         var x,y = mouse.getPos();
