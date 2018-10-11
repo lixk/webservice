@@ -4,6 +4,9 @@ import inspect
 import json
 import logging
 import os
+import socket
+import threading
+import time
 
 from bottle import request, Bottle, response, run, template
 from gevent import monkey
@@ -18,7 +21,7 @@ PORT = 80  # server port
 app = Bottle()
 
 # load service modules and functions
-files = glob.glob(SERVICE_PACKAGE + '/**', recursive=True)
+files = glob.glob(SERVICE_PACKAGE + '/**')
 print(files)
 for f in files:
     if not f.endswith(EXT):
@@ -130,9 +133,32 @@ def enable_cors():
     response.headers['Access-Control-Allow-Origin'] = '*'
 
 
+# server startup callback function
+def on_startup():
+    import subprocess
+    import webbrowser
+    subprocess.Popen('bin/windowkit.exe -url http://127.0.0.1:%s/view/index.html' % PORT)
+    # webbrowser.open('http://127.0.0.1:%s/view/index.html' % PORT)
+
+
+# check if the server has startup
+def check_startup():
+    while True:
+        try:
+            sk = socket.socket()
+            sk.connect(('127.0.0.1', PORT))
+            sk.close()
+            break
+        except ConnectionError:
+            time.sleep(0.1)
+    on_startup()
+
+
 if __name__ == '__main__':
+    threading.Thread(target=check_startup).start()
+    # startup server
     for i in range(30):
         try:
             run(app=app, host='0.0.0.0', port=PORT, server='gevent')
-        except OSError as e:
+        except OSError:
             PORT += 1
