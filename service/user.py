@@ -33,13 +33,9 @@ def upload(file):
     :param file:
     :return:
     """
-    # print(file.name, file.filename, os.path.split(file.raw_filename)[1])
-    # print(dir(file))
     path = 'data/{0}'.format(os.path.split(file.raw_filename)[1])
-    # file.save(path, True)
-    # import webbrowser
-    # webbrowser.open('localhost')
-    return file.raw_filename
+    file.save(path, True)
+    return path
 
 
 def _private_function():
