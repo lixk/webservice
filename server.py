@@ -17,7 +17,7 @@ SERVICE = {}
 SERVICE_PACKAGE = 'service'
 VIEW_PACKAGE = 'view'
 EXT = '.py'  # file ext name
-PORT = 80  # server port
+PORT = 80  # default server port
 app = Bottle()
 
 # load service modules and functions

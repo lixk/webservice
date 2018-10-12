@@ -3,6 +3,9 @@
 <head>
     <title></title>
     <script type="text/javascript" src="http://localhost:{{port}}/service.js"></script>
+    <script>
+        setInterval(function(){service.heartbeat.beat()}, 1000);
+    </script>
 </head>
 <body>
 <input type="file" name="file" id="file">

@@ -2,7 +2,7 @@ import os
 import time
 import threading
 
-counter = 10
+counter = 20
 
 
 def beat():
@@ -10,14 +10,14 @@ def beat():
     counter = 10
 
 
-def timing():
+def count_down():
     global counter
     while True:
         time.sleep(1)
         print('beating', counter)
         counter -= 1
         if counter == 0:
-            os.abort()
+            os._exit(0)
 
 
-threading.Thread(target=timing).start()
+threading.Thread(target=count_down).start()
