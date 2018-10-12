@@ -9,34 +9,25 @@ import threading
 import time
 
 from bottle import request, Bottle, response, run, template
-from gevent import monkey
-
-monkey.patch_all()
-import sys
-
-print(os.getcwd(), sys.argv, os.path.split(sys.argv[0]))
-sys.path.append(os.path.split(sys.argv[0])[0])
 
 SERVICE = {}
 SERVICE_PACKAGE = 'service'
 VIEW_PACKAGE = 'view'
-EXT = '.py'  # file ext name
 PORT = 80  # default server port
 app = Bottle()
 
 # load service modules and functions
-files = glob.glob(SERVICE_PACKAGE + '/**')
-print(files)
-for f in files:
-    if not f.endswith(EXT):
-        continue
-    module_name = f.replace(os.path.sep, '.')[0:-len(EXT)]
+MODULE_FILES = glob.glob(SERVICE_PACKAGE + '/**.py')
+print('module files:', MODULE_FILES)
+for module_path in MODULE_FILES:
+    module_name = os.path.splitext(module_path)[0].replace(os.path.sep, '.')
     module = importlib.import_module(module_name)
     # extract Non-private functions
     for key, value in module.__dict__.items():
         if not key.startswith('_') and inspect.isfunction(value):
-            service_name = (module_name + '.' + key).replace('.', '/')
+            service_name = (module_name + '.' + key)
             SERVICE[service_name] = value
+print('services:', SERVICE)
 
 # service js template
 SERVICE_JS = r'''
@@ -81,12 +72,12 @@ def service():
     netloc = request.urlparts.netloc
 
     # register service to js
-    for name in SERVICE.keys():
-        js += 'initService("%s");\n' % name.replace('/', '.')
+    for service_name in SERVICE.keys():
+        js += 'initService("%s");\n' % service_name
 
-    for name, func in SERVICE.items():
+    for service_name, func in SERVICE.items():
         # service url
-        url = '{0}://{1}/{2}'.format(scheme, netloc, name)
+        url = '{0}://{1}/{2}'.format(scheme, netloc, service_name.replace('.', '/'))
         # js function doc
         doc = inspect.getdoc(func)
         if doc:
@@ -100,7 +91,7 @@ def service():
         data = '{%s}' % ', '.join(['{0}:{0}'.format(arg) for arg in args])
         # create js function
         js += 'window.%(name)s = function(%(js_args)s){ bindService("%(url)s", %(data)s, success, error); }\n' % {
-            "name": name.replace('/', '.'),
+            "name": service_name,
             "js_args": js_args,
             "url": url,
             "data": data
@@ -116,7 +107,7 @@ def service():
 def dispatcher(path):
     params = dict(request.POST)
     print(path, params)
-    service_function = SERVICE.get(path, None)
+    service_function = SERVICE.get(path.replace('/', '.'), None)
     if service_function is None:
         return json.dumps({'code': 404, 'message': 'Service "%s" not found!' % path}, ensure_ascii=False)
     try:
@@ -140,7 +131,6 @@ def enable_cors():
 # server startup callback function
 def on_startup():
     import subprocess
-    import webbrowser
     subprocess.Popen('bin/easy-window.exe -url http://127.0.0.1:%s/view/index.html' % PORT)
     # webbrowser.open('http://127.0.0.1:%s/view/index.html' % PORT)
 
@@ -163,6 +153,6 @@ if __name__ == '__main__':
     # startup server
     for i in range(30):
         try:
-            run(app=app, host='0.0.0.0', port=PORT, server='gevent')
+            run(app=app, host='0.0.0.0', port=PORT)
         except OSError:
             PORT += 1

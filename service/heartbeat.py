@@ -8,6 +8,7 @@ counter = 20
 def beat():
     global counter
     counter = 10
+    print('counter', counter)
 
 
 def count_down():
