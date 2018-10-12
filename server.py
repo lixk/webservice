@@ -12,6 +12,10 @@ from bottle import request, Bottle, response, run, template
 from gevent import monkey
 
 monkey.patch_all()
+import sys
+
+print(os.getcwd(), sys.argv, os.path.split(sys.argv[0]))
+sys.path.append(os.path.split(sys.argv[0])[0])
 
 SERVICE = {}
 SERVICE_PACKAGE = 'service'
@@ -137,7 +141,7 @@ def enable_cors():
 def on_startup():
     import subprocess
     import webbrowser
-    subprocess.Popen('bin/windowkit.exe -url http://127.0.0.1:%s/view/index.html' % PORT)
+    subprocess.Popen('bin/easy-window.exe -url http://127.0.0.1:%s/view/index.html' % PORT)
     # webbrowser.open('http://127.0.0.1:%s/view/index.html' % PORT)
 
 
