@@ -3,16 +3,18 @@
 <head>
     <title></title>
     <script type="text/javascript" src="http://localhost:{{port}}/service.js"></script>
-    <script>
-        setInterval(function(){service.heartbeat.beat()}, 1000);
-    </script>
 </head>
 <body>
 <input type="file" name="file" id="file">
+<input type="button" id="b1">
 <script>
-    service.user.get_user_by_id('1', function(data){alert(data)});
+    //service.user.get_user_by_id('1', function(data){alert(data)});
     document.querySelector('#file').onchange = function (e) {
         service.user.upload(this.files[0], function(data){console.log(data);});
+    }
+    document.querySelector('#b1').onclick = function (e) {
+        f = external.openFile();
+        alert(f);
     }
 </script>
 </body>

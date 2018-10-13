@@ -131,8 +131,10 @@ def enable_cors():
 # server startup callback function
 def on_startup():
     import subprocess
-    subprocess.Popen('bin/easy-window.exe -url http://127.0.0.1:%s/view/index.html' % PORT)
-    # webbrowser.open('http://127.0.0.1:%s/view/index.html' % PORT)
+    p = subprocess.Popen('bin/easy-window.exe -url http://127.0.0.1:%s/view/index.html' % PORT)
+    print(p.pid)
+    import processutil
+    processutil.monitor(p.pid)
 
 
 # check if the server has startup
