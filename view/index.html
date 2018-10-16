@@ -2,35 +2,48 @@
 <html>
 <head>
     <title></title>
-    <script type="text/javascript" src="http://localhost:{{port}}/service.js"></script>
+    <script type="text/javascript" src="service.js"></script>
     <script src="vue.js"></script>
 </head>
 <body>
-<div id="app-1">
+<div id="app">
     <input type="file" name="file" id="file">
-    <input v-model="n1" value="{{n1}}"> + <input v-model="n2" value="{{n2}}"> = <input v-model="result" value="{{result}}"> <button v-on:click="cal">计算</button>
+    <input v-model="x"> + <input v-model="y"> = <input v-model="z"> <button v-on:click="add">计算</button>
+    <p>{{x}} + {{y}} = {{z}}</p>
 </div>
+ <div id="app-5">
+      <p>{{ message }}</p>
+      <button v-on:click="reverseMessage">逆转消息</button>
+    </div>
 <script>
-    //service.user.get_user_by_id('1', function(data){alert(data)});
+    service.user.get_user_by_id('1', function(data){alert(data)});
     document.querySelector('#file').onchange = function (e) {
         service.user.upload(this.files[0], function(data){console.log(data);});
     }
-    document.querySelector('#b1').onclick = function (e) {
-        f = external.openFile();
-        alert(f);
-    }
     var app = new Vue({
-        el: '#app-1',
-        data: {n1: 0, n2: 0, result: 0},
+        el: '#app',
+        data: {x: '', y: '', z: ''},
         methods: {
-            cal: function () {
-                service.test.add(this.n1, this.n2, function(data){
-                    this.result = data;
-                });
+            add: function () {
+                service.executor.add(this.x, this.y, function(data){
+                    app.z = data;
+                }, function(e){external.alert(e, '提示')});
             }
         }
 
     });
+
+var app5 = new Vue({
+  el: '#app-5',
+  data: {
+    message: 'Hello Vue.js!'
+  },
+  methods: {
+    reverseMessage: function () {
+      this.message = this.message.split('').reverse().join('')
+    }
+  }
+})
 </script>
 </body>
 </html>
