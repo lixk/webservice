@@ -3,10 +3,13 @@
 <head>
     <title></title>
     <script type="text/javascript" src="http://localhost:{{port}}/service.js"></script>
+    <script src="vue.js"></script>
 </head>
 <body>
-<input type="file" name="file" id="file">
-<input type="button" id="b1">
+<div id="app-1">
+    <input type="file" name="file" id="file">
+    <input v-model="n1" value="{{n1}}"> + <input v-model="n2" value="{{n2}}"> = <input v-model="result" value="{{result}}"> <button v-on:click="cal">计算</button>
+</div>
 <script>
     //service.user.get_user_by_id('1', function(data){alert(data)});
     document.querySelector('#file').onchange = function (e) {
@@ -16,6 +19,18 @@
         f = external.openFile();
         alert(f);
     }
+    var app = new Vue({
+        el: '#app-1',
+        data: {n1: 0, n2: 0, result: 0},
+        methods: {
+            cal: function () {
+                service.test.add(this.n1, this.n2, function(data){
+                    this.result = data;
+                });
+            }
+        }
+
+    });
 </script>
 </body>
 </html>

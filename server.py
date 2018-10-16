@@ -4,16 +4,13 @@ import inspect
 import json
 import logging
 import os
-import socket
-import threading
-import time
 
 from bottle import request, Bottle, response, run, template
 
 SERVICE = {}
 SERVICE_PACKAGE = 'service'
 VIEW_PACKAGE = 'view'
-PORT = 80  # default server port
+PORT = 8000  # default server port
 app = Bottle()
 
 # load service modules and functions
@@ -22,7 +19,7 @@ print('module files:', MODULE_FILES)
 for module_path in MODULE_FILES:
     module_name = os.path.splitext(module_path)[0].replace(os.path.sep, '.')
     module = importlib.import_module(module_name)
-    # extract Non-private functions
+    # extract Non-private functions as service
     for key, value in module.__dict__.items():
         if not key.startswith('_') and inspect.isfunction(value):
             service_name = (module_name + '.' + key)
@@ -128,33 +125,13 @@ def enable_cors():
     response.headers['Access-Control-Allow-Origin'] = '*'
 
 
-# server startup callback function
-def on_startup():
-    import subprocess
-    p = subprocess.Popen('bin/easy-window.exe -url http://127.0.0.1:%s/view/index.html' % PORT)
-    print(p.pid)
-    import processutil
-    processutil.monitor(p.pid)
-
-
-# check if the server has startup
-def check_startup():
-    while True:
-        try:
-            sk = socket.socket()
-            sk.connect(('127.0.0.1', PORT))
-            sk.close()
-            break
-        except ConnectionError:
-            time.sleep(0.1)
-    on_startup()
-
-
 if __name__ == '__main__':
-    threading.Thread(target=check_startup).start()
+    import serverMonitor
+    serverMonitor.monitor()
     # startup server
     for i in range(30):
         try:
+            serverMonitor.PORT = PORT
             run(app=app, host='0.0.0.0', port=PORT)
         except OSError:
             PORT += 1
