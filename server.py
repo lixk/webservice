@@ -57,7 +57,7 @@ function initService(url, data, success, error) {
             if (xhr.status == 200) {
                 var r = eval('('+xhr.response+')');
                 if(r.code == 200){
-                    success(r.data)
+                    success(r.data);
                 } else {error(r.message)}
             } else {
                 error(xhr.response);
