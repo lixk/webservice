@@ -7,7 +7,7 @@
 </head>
 <body>
 <div id="app">
-    <input type="file" name="file" id="file">
+    <!--<input type="file" name="file" id="file">-->
     <input v-model="x"> + <input v-model="y"> = <input v-model="z"> <button v-on:click="add">计算</button>
     <p>{{x}} + {{y}} = {{z}}</p>
 </div>
@@ -16,10 +16,10 @@
       <button v-on:click="reverseMessage">逆转消息</button>
     </div>
 <script>
-    service.user.get_user_by_id('1', function(data){alert(data)});
-    document.querySelector('#file').onchange = function (e) {
-        service.user.upload(this.files[0], function(data){console.log(data);});
-    }
+    //service.user.get_user_by_id('1', function(data){alert(data)});
+    //document.querySelector('#file').onchange = function (e) {
+    //    service.user.upload(this.files[0], function(data){console.log(data);});
+    //}
     var app = new Vue({
         el: '#app',
         data: {x: '', y: '', z: ''},

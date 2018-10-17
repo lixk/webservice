@@ -26,5 +26,7 @@ def open_browser():
 
 
 # threading.Thread(target=open_browser).start()
-app.run(host='0.0.0.0', port=8000)
-
+# app.run(host='0.0.0.0', port=8000)
+import inspect
+print(inspect.getfullargspec(index).args + ['success', 'error'])
+print(inspect.getdoc(index))

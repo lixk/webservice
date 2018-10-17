@@ -1,47 +1,33 @@
 import os
+import subprocess
 import threading
 import time
-from urllib import request
 
 import psutil
 
+import netutil
+import server
+
 
 class Window:
-    def __init__(self):
-        self.url = None
-        self.thread = None
+    def __init__(self, args, port):
+        self.args = ' '.join(args)
+        self.port = netutil.get_available_port(default_port=port)
 
-    def _on_server_startup(self):
+    def server_callback(self):
         while True:
-            try:
-                request.urlopen(self.url)
-                break
-            except OSError as e:
-                print(e)
-                time.sleep(0.1)
-        self._callback()
+            time.sleep(0.5)
+            if netutil.is_port_used('localhost', self.port):
+                pid = subprocess.Popen(self.args).pid
+                while psutil.pid_exists(pid):
+                    time.sleep(1)
+                os._exit(0)
 
-    def listen(self, url):
-        self.url = url
-        if not self.thread:
-            self.thread = threading.Thread(target=self._on_server_startup)
-            self.thread.start()
+    def start(self):
+        threading.Thread(target=self.server_callback).start()
+        server.start(self.port)
 
-    @staticmethod
-    def _callback():
-        """
-        server startup callback function
 
-        :return:
-        """
-        import subprocess
-        args = ['bin/easy-window.exe',
-                '-url view/index.html',
-                '-title 哈哈哈',
-                '-icon bin/favicon.ico',
-                '-timeout 6000']
-        pid = subprocess.Popen(' '.join(args)).pid
-        while psutil.pid_exists(pid):
-            time.sleep(1)
-        # exit
-        os._exit(0)
+if __name__ == '__main__':
+    window = Window(server.CONFIG['window-config']['args'], server.PORT)
+    window.start()
