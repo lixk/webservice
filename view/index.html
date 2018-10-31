@@ -2,7 +2,7 @@
 <html>
 <head>
     <title></title>
-    <script type="text/javascript" src="http://localhost:${port}/service.js"></script>
+    <script src="service.js"></script>
     <script src="vue.js"></script>
 </head>
 <body>
@@ -22,7 +22,7 @@
          if(r!=null)return  unescape(r[2]); return null;
     }
 
-    alert(getQueryString('port'));
+    //alert(getQueryString('port'));
 
     //service.user.get_user_by_id('1', function(data){alert(data)});
     //document.querySelector('#file').onchange = function (e) {

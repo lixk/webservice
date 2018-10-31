@@ -1,7 +1,7 @@
 ﻿args:
   - easy-window.exe
-#  - -url "view/index.html\?port=3000"
-  - -url "http://jeasyui.com/demo-vue/main/index.php"
+  - -url "./view/index.html"
+#  - -url "http://www.baidu.com?a=123"
   - -title 测试程序
   - -icon favicon.ico
   - -width 800
